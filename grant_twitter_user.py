@@ -23,6 +23,12 @@ parser.add_argument('category_id')
 parser.add_argument('achievement_id')
 
 # Optional switches
+parser.add_argument('-d', '--send_dm',
+                    action='store_true',
+                    default=False,
+                    dest="send_dm",
+                    help="Optionally send the twitter user a DM with a link to their Proof-of-Achievement")
+
 parser.add_argument('-c', '--settings',
                     default="local_settings.conf",
                     dest="settings_config",
@@ -36,6 +42,7 @@ if __name__ == '__main__':
     ecosystem_id = int(args.ecosystem_id)
     category_id = int(args.category_id)
     achievement_id = int(args.achievement_id)
+    send_dm = args.send_dm
 
     if twitter_username.startswith('@'):
         twitter_username = twitter_username[1:]
@@ -182,5 +189,15 @@ if __name__ == '__main__':
     resp = cleos.push_transaction(trx, key, broadcast=True)
 
     print(resp)
+
+    if send_dm:
+        # DM a notification to the user
+        achievement = ecosystem.get('categories')[category_id].get('achievements')[achievement_id]
+        msg = f"You've earned the \"{achievement.get('name')}\" achievement from \"{ecosystem.get('name')}\"!"
+        msg += "\n\n"
+        msg += "It will live forever on the WAX blockchain! Here's your shareable Proof-of-Achievement link."
+        msg += "\n\n"
+        msg += f"https://explorer.waxbadges.com/poa/{ecosystem.get('key')}/{category_id}/{achievement_id}/{user_id}"
+        twitter_api.PostDirectMessage(text=msg, screen_name=twitter_username)
 
 
